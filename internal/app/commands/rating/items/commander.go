@@ -9,6 +9,15 @@ import (
 	"github.com/ozonmp/omp-bot/internal/app/path"
 )
 
+const (
+	HelpCmd   = "help"
+	ListCmd   = "list"
+	GetCmd    = "get"
+	DeleteCmd = "delete"
+	NewCmd    = "new"
+	EditCmd   = "edit"
+)
+
 type ItemsCommander interface {
 	Help(inputMsg *tgbotapi.Message)
 	Get(inputMsg *tgbotapi.Message)
@@ -39,26 +48,26 @@ func NewItemsCommander(bot *tgbotapi.BotAPI, service service.ItemsService) Items
 
 func (c *RatingItemsCommander) HandleCallback(callback *tgbotapi.CallbackQuery, callbackPath path.CallbackPath) {
 	switch callbackPath.CallbackName {
-	case "list":
+	case ListCmd:
 		c.CallbackList(callback, callbackPath)
 	default:
-		log.Printf("RatingItemsCommander.HandleCallback: unknown callback name: %s", callbackPath.CallbackName)
+		log.Printf(UnknownCmd, callbackPath.CallbackName)
 	}
 }
 
 func (c *RatingItemsCommander) HandleCommand(msg *tgbotapi.Message, commandPath path.CommandPath) {
 	switch commandPath.CommandName {
-	case "help":
+	case HelpCmd:
 		c.Help(msg)
-	case "list":
+	case ListCmd:
 		c.List(msg)
-	case "get":
+	case GetCmd:
 		c.Get(msg)
-	case "delete":
+	case DeleteCmd:
 		c.Delete(msg)
-	case "new":
+	case NewCmd:
 		c.New(msg)
-	case "edit":
+	case EditCmd:
 		c.Edit(msg)
 	default:
 		c.Default(msg)

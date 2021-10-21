@@ -6,47 +6,52 @@ import (
 	"github.com/ozonmp/omp-bot/internal/model/rating"
 )
 
+const (
+	OutOfBounds = "cursor out of bounds"
+	NotFound    = "entity not found"
+)
+
 // ItemsService Интерфейс согласно заданию-1
 type ItemsService interface {
-	Describe(itemsID uint64) (*rating.Items, error)
-	List(cursor uint64, limit uint64) ([]rating.Items, error)
-	Create(rating.Items) (uint64, error)
-	Update(itemsID uint64, items rating.Items) error
-	Remove(itemsID uint64) (bool, error)
+	Describe(itemID uint64) (*rating.Item, error)
+	List(cursor uint64, limit uint64) ([]rating.Item, error)
+	Create(rating.Item) (uint64, error)
+	Update(itemID uint64, item rating.Item) error
+	Remove(itemID uint64) (bool, error)
 }
 
 // DummyItemsService макет сервиса
 type DummyItemsService struct {
 	idCounter uint64
-	entities  []rating.Items
+	entities  []rating.Item
 }
 
 // NewDummyItemsService конструкор с тесовыми данными
 func NewDummyItemsService() *DummyItemsService {
-	return &DummyItemsService{3, []rating.Items{
-		{1, "First item"},
-		{2, "Second item"},
-		{3, "Third item"},
+	return &DummyItemsService{3, []rating.Item{
+		{ID: 1, Title: "First item"},
+		{ID: 2, Title: "Second item"},
+		{ID: 3, Title: "Third item"},
 	}}
 }
 
 //функция возвращает индекс элемента с указанным идентификатором
-func indexOfItems(id uint64, sl []rating.Items) (int, error) {
+func indexOfItem(id uint64, sl []rating.Item) (int, error) {
 	for res, item := range sl {
 		if item.ID == id {
 			return res, nil
 		}
 	}
 
-	return 0, errors.New("entity not found")
+	return 0, errors.New(NotFound)
 }
 
 // List метод интерфейса выборки слайса объектов с текущей cursor позиции по limit элементов
-func (s *DummyItemsService) List(cursor uint64, limit uint64) ([]rating.Items, error) {
+func (s *DummyItemsService) List(cursor uint64, limit uint64) ([]rating.Item, error) {
 
 	//если текущая позиция вышла за длину слайса
 	if int(cursor) >= len(s.entities) {
-		return nil, errors.New("cursor out of index")
+		return nil, errors.New(OutOfBounds)
 	}
 
 	//вычисляем конечную позицию выборкиб ограничив максимальное знаение длиной слайса
@@ -59,10 +64,10 @@ func (s *DummyItemsService) List(cursor uint64, limit uint64) ([]rating.Items, e
 }
 
 // Describe метод интерфейса возврата объекта по его идентификатору
-func (s *DummyItemsService) Describe(itemsID uint64) (*rating.Items, error) {
+func (s *DummyItemsService) Describe(itemID uint64) (*rating.Item, error) {
 
 	//ищем в слайсе индекс объекта с указанным идентификатором
-	idx, err := indexOfItems(itemsID, s.entities)
+	idx, err := indexOfItem(itemID, s.entities)
 
 	if err != nil {
 		return nil, err
@@ -72,7 +77,7 @@ func (s *DummyItemsService) Describe(itemsID uint64) (*rating.Items, error) {
 }
 
 // Create метод интерфейса создания нового объекта
-func (s *DummyItemsService) Create(entity rating.Items) (uint64, error) {
+func (s *DummyItemsService) Create(entity rating.Item) (uint64, error) {
 
 	//генерируем очередной идентификатор
 	s.idCounter++
@@ -85,26 +90,26 @@ func (s *DummyItemsService) Create(entity rating.Items) (uint64, error) {
 }
 
 // Update метод интерфейса обновления данных указанного объекта
-func (s *DummyItemsService) Update(itemsID uint64, items rating.Items) error {
+func (s *DummyItemsService) Update(itemID uint64, item rating.Item) error {
 
 	//ищем в слайсе индекс объекта с указанным идентификатором
-	idx, err := indexOfItems(itemsID, s.entities)
+	idx, err := indexOfItem(itemID, s.entities)
 	if err != nil {
 		return err
 	}
 
 	//Обновляем данные, оставив прежним идентификатор
-	s.entities[idx] = items
-	s.entities[idx].ID = itemsID
+	s.entities[idx] = item
+	s.entities[idx].ID = itemID
 
 	return nil
 }
 
 //метод интерфейса удаления объекта с заданным идентификатором
-func (s *DummyItemsService) Remove(itemsID uint64) (bool, error) {
+func (s *DummyItemsService) Remove(itemID uint64) (bool, error) {
 
 	//ищем в слайсе индекс объекта с указанным идентификатором
-	idx, err := indexOfItems(itemsID, s.entities)
+	idx, err := indexOfItem(itemID, s.entities)
 
 	if err != nil {
 		return false, err

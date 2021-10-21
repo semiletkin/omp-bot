@@ -3,28 +3,26 @@ package items
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	"github.com/ozonmp/omp-bot/internal/app/path"
+	"github.com/ozonmp/omp-bot/internal/service/rating/items"
 )
 
 // List обработка сообщений с запросом на выдачу списка объектов
 func (c *RatingItemsCommander) List(inputMessage *tgbotapi.Message) {
-	outputMsgText := "Here all the items: \n"
 
 	//если это первый вывод - выводим по максимальное число)
 	if c.currentLimit == 0 {
 		c.currentLimit = 3
 	}
 
-	outputMsgText = outputMsgText + fmt.Sprintf("(Items on page: %d )\n\n", c.currentLimit)
+	outputMsgText := fmt.Sprintf(HeaderList, c.currentLimit)
 
 	//формируем список для текущей позиции курсора и количества объектов на странице
 	entities, err := c.itemsService.List(c.currentCursor, c.currentLimit)
 	if err != nil {
-		log.Println("RatingItemsCommander.List ", err, c.currentCursor, c.currentLimit)
-		if err.Error() == "cursor out of index" {
+		if err.Error() == items.OutOfBounds {
 			//если курсор вышел за границы - уменьшим его на виличину объектов на странице
 			c.currentCursor = c.currentCursor - c.currentLimit
 			//и сгенерируем список заново

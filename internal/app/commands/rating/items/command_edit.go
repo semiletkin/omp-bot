@@ -3,7 +3,6 @@ package items
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/ozonmp/omp-bot/internal/model/rating"
@@ -18,25 +17,20 @@ func (c *RatingItemsCommander) Edit(inputMessage *tgbotapi.Message) {
 	args = strings.TrimSpace(args)
 
 	//пробуем разобрать JSON-объект
-	var entity rating.Items
+	var entity rating.Item
 	err := json.Unmarshal([]byte(args), &entity)
 	if err != nil {
-		log.Println("wrong args", args)
+		c.Answer(inputMessage, fmt.Sprintf(JsonError, err))
 		return
 	}
 
 	//пытаемся обновить объект с указанным идентификатором
 	err = c.itemsService.Update(entity.ID, entity)
 	if err != nil {
-		log.Printf("fail to update items with idx %d: %v", entity.ID, err)
+		c.Answer(inputMessage, fmt.Sprintf(IdNotFound, entity.ID))
 		return
 	}
 
 	//возвращаем сообщение об успешном обновлении
-	msg := tgbotapi.NewMessage(
-		inputMessage.Chat.ID,
-		fmt.Sprintf("%s edit ok", entity),
-	)
-
-	c.bot.Send(msg)
+	c.Answer(inputMessage, fmt.Sprintf(UpdateOk, entity))
 }

@@ -2,7 +2,6 @@ package items
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/ozonmp/omp-bot/internal/model/rating"
@@ -16,22 +15,18 @@ func (c *RatingItemsCommander) New(inputMessage *tgbotapi.Message) {
 	//получаем аргумент команды
 	args := inputMessage.CommandArguments()
 	args = strings.TrimSpace(args)
-	entity := rating.Items{Title: args}
+	entity := rating.Item{Title: args}
 
 	//пытаемся создать новый объект
 	id, err := c.itemsService.Create(entity)
 	if err != nil {
-		log.Printf("fail to create product with idx %d: %v", id, err)
+		c.Answer(inputMessage, fmt.Sprintf(CreateError, err))
 		return
 	}
 
 	//присваиваем назначенный сервисом идентификатор
 	entity.ID = id
 	//возвращаем сообщение об успешном создании объекта
-	msg := tgbotapi.NewMessage(
-		inputMessage.Chat.ID,
-		fmt.Sprintf(" %s create ok", entity),
-	)
 
-	c.bot.Send(msg)
+	c.Answer(inputMessage, fmt.Sprintf(CreateOk, entity))
 }

@@ -2,11 +2,12 @@ package rating
 
 import "fmt"
 
-type Items struct {
-	ID    uint64
-	Title string
+type Item struct {
+	ID    uint64 //автоинкрементный идентификатор
+	Title string //полезная нагрузка
 }
 
-func (i Items) String() string {
+//метод интерфейса Stringer
+func (i Item) String() string {
 	return fmt.Sprintf("Item (%#v)", i)
 }
