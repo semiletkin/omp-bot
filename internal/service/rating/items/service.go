@@ -2,6 +2,7 @@ package items
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/ozonmp/omp-bot/internal/model/rating"
 )
@@ -22,13 +23,14 @@ type ItemsService interface {
 
 // DummyItemsService макет сервиса
 type DummyItemsService struct {
+	lock      *sync.Mutex
 	idCounter uint64
 	entities  []rating.Item
 }
 
 // NewDummyItemsService конструкор с тесовыми данными
 func NewDummyItemsService() *DummyItemsService {
-	return &DummyItemsService{3, []rating.Item{
+	return &DummyItemsService{lock: &sync.Mutex{}, idCounter: 3, entities: []rating.Item{
 		{ID: 1, Title: "First item"},
 		{ID: 2, Title: "Second item"},
 		{ID: 3, Title: "Third item"},
@@ -49,6 +51,9 @@ func indexOfItem(id uint64, sl []rating.Item) (int, error) {
 // List метод интерфейса выборки слайса объектов с текущей cursor позиции по limit элементов
 func (s *DummyItemsService) List(cursor uint64, limit uint64) ([]rating.Item, error) {
 
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	//если текущая позиция вышла за длину слайса
 	if int(cursor) >= len(s.entities) {
 		return nil, errors.New(OutOfBounds)
@@ -65,6 +70,8 @@ func (s *DummyItemsService) List(cursor uint64, limit uint64) ([]rating.Item, er
 
 // Describe метод интерфейса возврата объекта по его идентификатору
 func (s *DummyItemsService) Describe(itemID uint64) (*rating.Item, error) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	//ищем в слайсе индекс объекта с указанным идентификатором
 	idx, err := indexOfItem(itemID, s.entities)
@@ -79,6 +86,9 @@ func (s *DummyItemsService) Describe(itemID uint64) (*rating.Item, error) {
 // Create метод интерфейса создания нового объекта
 func (s *DummyItemsService) Create(entity rating.Item) (uint64, error) {
 
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	//генерируем очередной идентификатор
 	s.idCounter++
 
@@ -91,6 +101,9 @@ func (s *DummyItemsService) Create(entity rating.Item) (uint64, error) {
 
 // Update метод интерфейса обновления данных указанного объекта
 func (s *DummyItemsService) Update(itemID uint64, item rating.Item) error {
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	//ищем в слайсе индекс объекта с указанным идентификатором
 	idx, err := indexOfItem(itemID, s.entities)
@@ -107,6 +120,9 @@ func (s *DummyItemsService) Update(itemID uint64, item rating.Item) error {
 
 //метод интерфейса удаления объекта с заданным идентификатором
 func (s *DummyItemsService) Remove(itemID uint64) (bool, error) {
+
+	s.lock.Lock()
+	defer s.lock.Unlock()
 
 	//ищем в слайсе индекс объекта с указанным идентификатором
 	idx, err := indexOfItem(itemID, s.entities)
